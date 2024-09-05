@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -71,7 +70,10 @@ dependencies {
     implementation(libs.zxing.android.embedded)
     implementation(libs.code.scanner)
     implementation(libs.firebase.database.ktx)
-    implementation("com.tom-roush:pdfbox-android:2.0.27.0")
+    implementation(libs.tom.roush.pdfbox.android)
+    implementation(libs.firebase.storage)
+    implementation(libs.firebase.core)
 
 
+    apply(plugin = "com.google.gms.google-services")
 }
