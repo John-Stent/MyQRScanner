@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "428503721834",
+    "firebase_url": "https://myqr-5607b-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "myqr-5607b",
+    "storage_bucket": "myqr-5607b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428503721834:android:97dbac5564a902341ee713",
+        "android_client_info": {
+          "package_name": "com.istentoumis.myQrWallet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAS-UrHJCv5CQs8BxkdsRwd3wILB9m7PLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428503721834:android:61f4634c0ed01cbe1ee713",
+        "android_client_info": {
+          "package_name": "com.istentoumis.myqrscanner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAS-UrHJCv5CQs8BxkdsRwd3wILB9m7PLw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
