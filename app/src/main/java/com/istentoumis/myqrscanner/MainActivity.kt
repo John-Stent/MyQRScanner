@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.ImageView
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
@@ -20,6 +21,8 @@ import com.istentoumis.myqrscanner.databinding.ActivityMainBinding
 import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.rendering.PDFRenderer
+import java.io.ByteArrayOutputStream
+import java.util.UUID
 
 
 class MainActivity : Activity() {
@@ -34,10 +37,6 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        databaseRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://myqr-5607b-default-rtdb.europe-west1.firebasedatabase.app")
-        tokensRef = databaseRef.child("Tokens")
-
         // Initialize PDFBox for Android
         PDFBoxResourceLoader.init(applicationContext)
 
@@ -75,7 +74,7 @@ class MainActivity : Activity() {
 
             // Use PDFRenderer to render the pages into images
             val renderer = PDFRenderer(document)
-            var qrCodeBitmap: Bitmap? = null
+            val qrCodeBitmap: Bitmap
 
 // Iterate through each page
             for (i in 0 until document.numberOfPages) {
@@ -85,16 +84,14 @@ class MainActivity : Activity() {
 
                 if (foundBitmap != null) {
                     qrCodeBitmap = cropToQRCode(foundBitmap, qrCodeRect)
+                    uploadQRCodeImage(qrCodeBitmap) // Upload QR code image
+                    showQRCodeImage(qrCodeBitmap) // Show the QR code image in the ImageView
                     Log.d("QR Code Found", "QR Code found on page $i")
                     break // Exit loop if a QR code is found
                 }
             }
 
             document.close()
-
-            // Show the QR code image in the ImageView
-            showQRCodeImage(qrCodeBitmap)
-
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -138,11 +135,11 @@ class MainActivity : Activity() {
     }
 
     // Function to crop the bitmap to the QR code area with some padding
-    private fun cropToQRCode(bitmap: Bitmap, rect: Rect?): Bitmap? {
-        return rect?.let {
+    private fun cropToQRCode(bitmap: Bitmap, rect: Rect?): Bitmap {
+        return rect.let {
             // Add some padding to the rectangle
             val padding = 50 // Adjust padding as needed
-            val left = (it.left - padding).coerceAtLeast(0)
+            val left = (it!!.left - padding).coerceAtLeast(0)
             val top = (it.top - padding).coerceAtLeast(0)
             val right = (it.right + padding).coerceAtMost(bitmap.width)
             val bottom = (it.bottom + padding).coerceAtMost(bitmap.height)
@@ -154,14 +151,56 @@ class MainActivity : Activity() {
         }
     }
 
+    // Convert Bitmap to Byte Array
+    private fun bitmapToByteArray(bitmap: Bitmap): ByteArray {
+        val stream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        return stream.toByteArray()
+    }
+
+    // Function to upload the QR code image to Firebase Storage
+    private fun uploadQRCodeImage(bitmap: Bitmap) {
+        val storageReference = FirebaseStorage.getInstance().reference
+        val imageRef = storageReference.child("qr_codes/${UUID.randomUUID()}.png")
+
+        val byteArray = bitmapToByteArray(bitmap)
+
+        imageRef.putBytes(byteArray)
+            .addOnSuccessListener {
+                Log.d("Upload", "QR Code image uploaded successfully.")
+                // Optionally, store metadata in Firestore
+                imageRef.downloadUrl.addOnSuccessListener { uri ->
+                    storeQRCodeMetadata(uri.toString())
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.e("Upload", "Failed to upload QR Code image.", exception)
+            }
+    }
+    // Function to store QR code metadata in Firebase Realtime Database
+    private fun storeQRCodeMetadata(imageUrl: String) {
+        val qrCodeData = hashMapOf(
+            "imageUrl" to imageUrl,
+            "timestamp" to System.currentTimeMillis() // Add any other metadata you need
+        )
+        databaseRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://myqr-5607b-default-rtdb.europe-west1.firebasedatabase.app")
+
+        // Generate a unique key for each QR code
+        val newKey = databaseRef.push().key ?: return
+
+        databaseRef.child(newKey)
+            .setValue(qrCodeData)
+            .addOnSuccessListener {
+                Log.d("RealtimeDB", "QR Code metadata stored successfully.")
+            }
+            .addOnFailureListener { exception ->
+                Log.e("RealtimeDB", "Failed to store QR Code metadata.", exception)
+            }
+    }
     // Function to show the QR code image in the ImageView
-    private fun showQRCodeImage(bitmap: Bitmap?) {
+    private fun showQRCodeImage(bitmap: Bitmap) {
         binding.qrCodeImageView.setImageBitmap(bitmap)
-        binding.qrCodeImageView.visibility = if (bitmap != null) {
-            ImageView.VISIBLE
-        } else {
-            ImageView.GONE
-        }
+        binding.qrCodeImageView.visibility = ImageView.VISIBLE
     }
 
 
