@@ -33,6 +33,23 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
              />
+        <EditText
+            android:id="@+id/descriptionEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Enter description" />
+
+        <EditText
+            android:id="@+id/codeEditText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="Enter verification code" />
+
+        <Button
+            android:id="@+id/verifyButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Verify" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.6.0"
+agp = "8.7.0"
 appcompat = "1.7.0"
 codeScanner = "2.3.0"
 constraintlayout = "2.1.4"
@@ -20,6 +20,9 @@ pdfbox = "2.0.24"
 pdfboxAndroid = "2.0.27.0"
 pdfboxAndroidVersion = "2.0.27.0"
 zxingAndroidEmbedded = "4.1.0"
+firebaseAuthKtx = "23.1.0"
+firebaseBom = "33.7.0"
+
 
 
 [libraries]
@@ -49,6 +52,9 @@ pdfbox = { module = "org.apache.pdfbox:pdfbox", version.ref = "pdfbox" }
 pdfbox-android = { module = "com.tom_roush:pdfbox-android", version.ref = "pdfboxAndroid" }
 tom-roush-pdfbox-android = { module = "com.tom-roush:pdfbox-android", version.ref = "pdfboxAndroidVersion" }
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
