@@ -1,6 +1,5 @@
 package com.istentoumis.myqrscanner
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Bitmap
@@ -9,102 +8,141 @@ import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.viewModels
+import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.FirebaseException
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.PhoneAuthCredential
-import com.google.firebase.auth.PhoneAuthOptions
 import com.google.firebase.auth.PhoneAuthProvider
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
+import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
 import com.istentoumis.myqrscanner.databinding.ActivityMainBinding
-import com.tom_roush.pdfbox.android.PDFBoxResourceLoader
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.rendering.PDFRenderer
+import dagger.hilt.android.AndroidEntryPoint
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
-class MainActivity : Activity() {
-    private lateinit var binding: ActivityMainBinding
+@AndroidEntryPoint
+class MainActivity : AppCompatActivity() {
     private val PDF_REQUEST_CODE = 1001
-    private val SIGN_IN_REQUEST_CODE = 1234
-    private lateinit var databaseRef: DatabaseReference
-    private lateinit var auth: FirebaseAuth
-    private lateinit var verificationId: String
+    private lateinit var binding: ActivityMainBinding
+    private val vm: MainViewModel by viewModels()
+    @Inject lateinit var authManager: AuthManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        PDFBoxResourceLoader.init(applicationContext)
-        auth = FirebaseAuth.getInstance()
 
-        FirebaseAuth.getInstance().firebaseAuthSettings.setAppVerificationDisabledForTesting(true)
-        startPhoneNumberVerification("+306974868456") // Replace with your phone number
-        binding.loadPdfButton.setOnClickListener {
-            if (auth.currentUser != null) {
-                openFilePicker()
+        vm.authState.observe(this, { user ->
+            if (user == null) {
+                showPhoneNumberDialog()
             }
-            else {
+        })
+
+        binding.loadPdfButton.setOnClickListener {
+            if (vm.authState.value != null) {
+                openFilePicker()
+            } else {
                 Toast.makeText(this, "Please sign in first.", Toast.LENGTH_LONG).show()
             }
         }
-        binding.verifyButton.setOnClickListener {
-            val code = binding.codeEditText.text.toString()
+    }
+
+    private fun showPhoneNumberDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Login")
+
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+
+        val phoneInput = EditText(this)
+        phoneInput.hint = "Enter phone number"
+        layout.addView(phoneInput)
+
+        builder.setView(layout)
+
+        builder.setPositiveButton("Send Code") { dialog, _ ->
+            val phoneNumber = phoneInput.text.toString()
+            if (phoneNumber.isNotEmpty()) {
+                vm.startPhoneNumberVerification(this, phoneNumber, verificationCallbacks)
+            } else {
+                Toast.makeText(this, "Please enter a phone number", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        builder.setNegativeButton("Cancel") { dialog, _ ->
+            dialog.cancel()
+        }
+
+        builder.show()
+    }
+
+    private val verificationCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
+        override fun onVerificationCompleted(credential: PhoneAuthCredential) {
+            vm.signInWithPhoneAuthCredential(this@MainActivity, credential) { success, message ->
+                if (success) {
+                    Toast.makeText(this@MainActivity, "Sign-in successful", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Sign-in failed: $message", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+
+        override fun onVerificationFailed(e: FirebaseException) {
+            Toast.makeText(this@MainActivity, "Verification failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+
+        override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
+            authManager.setVerificationId(verificationId)
+            showVerificationCodeDialog()
+        }
+    }
+
+    private fun showVerificationCodeDialog() {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Enter Verification Code")
+
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+
+        val codeInput = EditText(this)
+        codeInput.hint = "Enter verification code"
+        layout.addView(codeInput)
+
+        builder.setView(layout)
+
+        builder.setPositiveButton("Verify") { dialog, _ ->
+            val code = codeInput.text.toString()
             if (code.isNotEmpty()) {
-                verifyPhoneNumberWithCode(code)
+                val credential = authManager.verifyPhoneNumberWithCode(code)
+                vm.signInWithPhoneAuthCredential(this, credential) { success, message ->
+                    if (success) {
+                        Toast.makeText(this, "Sign-in successful", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(this, "Sign-in failed: $message", Toast.LENGTH_LONG).show()
+                    }
+                }
             } else {
                 Toast.makeText(this, "Please enter the verification code", Toast.LENGTH_SHORT).show()
             }
         }
-    }
 
-    private fun startPhoneNumberVerification(phoneNumber: String) {
-        val options = PhoneAuthOptions.newBuilder(auth)
-            .setPhoneNumber(phoneNumber)
-            .setTimeout(60L, TimeUnit.SECONDS)
-            .setActivity(this)
-            .setCallbacks(object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
-                override fun onVerificationCompleted(credential: PhoneAuthCredential) {
-                    signInWithPhoneAuthCredential(credential)
-                    Log.w("STENT", "Verification completed: ${credential.smsCode}")
-                }
+        builder.setNegativeButton("Cancel") { dialog, _ ->
+            dialog.cancel()
+        }
 
-                override fun onVerificationFailed(e: FirebaseException) {
-                    Toast.makeText(this@MainActivity, "Verification failed: ${e.message}", Toast.LENGTH_LONG).show()
-                    Log.w("STENT", "Verification failed: ${e.message}")
-                }
-
-                override fun onCodeSent(verificationId: String, token: PhoneAuthProvider.ForceResendingToken) {
-                    this@MainActivity.verificationId = verificationId
-                    Log.w("STENT", "Code sent: $verificationId")
-                }
-            })
-            .build()
-        PhoneAuthProvider.verifyPhoneNumber(options)
-    }
-
-    private fun verifyPhoneNumberWithCode(code: String) {
-        val credential = PhoneAuthProvider.getCredential(verificationId, code)
-        signInWithPhoneAuthCredential(credential)
-    }
-
-    private fun signInWithPhoneAuthCredential(credential: PhoneAuthCredential) {
-        auth.signInWithCredential(credential)
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful) {
-                    Toast.makeText(this, "Sign-in successful", Toast.LENGTH_LONG).show()
-                } else {
-                    Toast.makeText(this, "Sign-in failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                }
-            }
+        builder.show()
     }
 
     private fun openFilePicker() {
@@ -119,15 +157,11 @@ class MainActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PDF_REQUEST_CODE && resultCode == RESULT_OK) {
             data?.data?.let { pdfUri ->
-                val uid = auth.currentUser?.uid
+                val uid = vm.authState.value?.uid
                 if (uid != null) {
                     scanPDFForQRCodes(pdfUri, uid)
                 }
             }
-        } else if (requestCode == SIGN_IN_REQUEST_CODE && resultCode == RESULT_OK) {
-            auth.currentUser?.let {
-                // User successfully signed in
-            } ?: Toast.makeText(this, "Sign-in failed. Please try again.", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -157,13 +191,13 @@ class MainActivity : Activity() {
     }
 
     private fun storeQRCodeContent(content: String, uid: String, description: String) {
-        val qrCodeData = hashMapOf(
+        val qrCodeData = mapOf(
             "content" to content,
             "timestamp" to getCurrentDate(),
             "description" to description
         )
-        databaseRef = FirebaseDatabase.getInstance().getReferenceFromUrl("https://myqr-5607b-default-rtdb.europe-west1.firebasedatabase.app")
-        databaseRef.child("Users").child(uid).push()
+        val databaseRef = FirebaseDatabase.getInstance().getReference("Users/$uid/QRCodeData")
+        databaseRef.push()
             .setValue(qrCodeData)
             .addOnSuccessListener { Log.d("RealtimeDB", "QR Code content stored successfully.") }
             .addOnFailureListener { exception -> Log.e("RealtimeDB", "Failed to store QR Code content.", exception) }
@@ -172,7 +206,7 @@ class MainActivity : Activity() {
     private fun decodeQRCode(bitmap: Bitmap): Pair<String?, Rect?> {
         val intArray = IntArray(bitmap.width * bitmap.height)
         bitmap.getPixels(intArray, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
-        val source = com.google.zxing.RGBLuminanceSource(bitmap.width, bitmap.height, intArray)
+        val source = RGBLuminanceSource(bitmap.width, bitmap.height, intArray)
         val binaryBitmap = BinaryBitmap(HybridBinarizer(source))
         val reader = MultiFormatReader()
         val hints = mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(

@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_color"
     tools:context=".MainActivity" >
 
     <LinearLayout
@@ -11,45 +12,38 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@drawable/rounded_corner_background">
 
         <!-- Button for Scanning QR Code -->
         <Button
             android:id="@+id/scanQrCodeButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Scan QR Code" />
+            android:text="Scan QR Code"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/button_background"
+            android:textColor="@color/white" />
 
         <!-- Button for Loading PDF -->
         <Button
             android:id="@+id/loadPdfButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Load PDF" />
+            android:text="Load PDF"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/button_background"
+            android:textColor="@color/white" />
 
-        <!-- Add an ImageView to display the QR code image -->
-        <ImageView
-            android:id="@+id/qrCodeImageView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-             />
         <EditText
             android:id="@+id/descriptionEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter description" />
+            android:hint="Enter description"
+            android:layout_marginBottom="16dp"
+            android:padding="8dp"
+            android:background="@drawable/edittext_background" />
 
-        <EditText
-            android:id="@+id/codeEditText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:hint="Enter verification code" />
-
-        <Button
-            android:id="@+id/verifyButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Verify" />
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

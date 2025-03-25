@@ -4,8 +4,9 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:8.7.0") // Or your specific version
-        classpath("com.google.gms:google-services:4.3.15") // Add the Google services classpath
+        classpath(libs.gradle) // Or your specific version
+        classpath(libs.google.services) // Add the Google services classpath
+        classpath (libs.hilt.android.gradle.plugin)
     }
 }// Top-level build file where you can add configuration options common to all sub-projects/modules.
 plugins {
