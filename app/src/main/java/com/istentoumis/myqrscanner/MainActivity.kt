@@ -23,6 +23,8 @@ import com.google.zxing.DecodeHintType
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
+import com.google.zxing.integration.android.IntentIntegrator
+import com.google.zxing.integration.android.IntentIntegrator.QR_CODE
 import com.istentoumis.myqrscanner.databinding.ActivityMainBinding
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.rendering.PDFRenderer
@@ -53,6 +55,21 @@ class MainActivity : AppCompatActivity() {
         binding.loadPdfButton.setOnClickListener {
             if (vm.authState.value != null) {
                 openFilePicker()
+            } else {
+                Toast.makeText(this, "Please sign in first.", Toast.LENGTH_LONG).show()
+                showPhoneNumberDialog()
+            }
+        }
+
+        binding.scanQrCodeButton.setOnClickListener {
+            if (vm.authState.value != null) {
+                val intentIntegrator = IntentIntegrator(this)
+                intentIntegrator.setDesiredBarcodeFormats(QR_CODE)
+                intentIntegrator.setPrompt("Scan a QR Code")
+                intentIntegrator.setCameraId(0) // Use the back camera
+                intentIntegrator.setBeepEnabled(true)
+                intentIntegrator.setBarcodeImageEnabled(true)
+                intentIntegrator.initiateScan()
             } else {
                 Toast.makeText(this, "Please sign in first.", Toast.LENGTH_LONG).show()
                 showPhoneNumberDialog()
@@ -161,6 +178,18 @@ class MainActivity : AppCompatActivity() {
                 val uid = vm.authState.value?.uid
                 if (uid != null) {
                     scanPDFForQRCodes(pdfUri, uid)
+                }
+            }
+        }
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null) {
+            if (result.contents == null) {
+                Toast.makeText(this, "Cancelled", Toast.LENGTH_LONG).show()
+            } else {
+                val uid = vm.authState.value?.uid
+                if (uid != null) {
+                    storeQRCodeContent(result.contents, uid, "Scanned QR Code")
+                    Toast.makeText(this, "QR Code scanned: ${result.contents}", Toast.LENGTH_LONG).show()
                 }
             }
         }
