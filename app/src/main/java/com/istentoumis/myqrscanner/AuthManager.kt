@@ -30,6 +30,17 @@ class AuthManager @Inject constructor(
         return PhoneAuthProvider.getCredential(verificationId!!, code)
     }
 
+    fun createUserWithPhoneNumber(credential: PhoneAuthCredential, onComplete: (Boolean, String?) -> Unit) {
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onComplete(true, null)
+                } else {
+                    onComplete(false, task.exception?.message)
+                }
+            }
+    }
+
     fun setVerificationId(verificationId: String) {
         this.verificationId = verificationId
     }

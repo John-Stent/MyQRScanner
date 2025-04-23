@@ -16,7 +16,7 @@ class MainViewModel @Inject constructor(
     private val _authState = MutableLiveData<FirebaseUser?>()
     val authState: LiveData<FirebaseUser?> get() = _authState
 
-    fun updateAuthState(user: FirebaseUser?) {
+    private fun updateAuthState(user: FirebaseUser?) {
         _authState.value = user
     }
 
@@ -26,6 +26,15 @@ class MainViewModel @Inject constructor(
 
     fun signInWithPhoneAuthCredential(activity: MainActivity, credential: PhoneAuthCredential, onComplete: (Boolean, String?) -> Unit) {
         authManager.signInWithPhoneAuthCredential(activity, credential) { success, message ->
+            if (success) {
+                updateAuthState(authManager.getCurrentUser())
+            }
+            onComplete(success, message)
+        }
+    }
+
+    fun createUserWithPhoneNumber(credential: PhoneAuthCredential, onComplete: (Boolean, String?) -> Unit) {
+        authManager.createUserWithPhoneNumber(credential) { success, message ->
             if (success) {
                 updateAuthState(authManager.getCurrentUser())
             }

@@ -44,17 +44,18 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        vm.authState.observe(this, { user ->
+        vm.authState.observe(this) { user ->
             if (user == null) {
                 showPhoneNumberDialog()
             }
-        })
+        }
 
         binding.loadPdfButton.setOnClickListener {
             if (vm.authState.value != null) {
                 openFilePicker()
             } else {
                 Toast.makeText(this, "Please sign in first.", Toast.LENGTH_LONG).show()
+                showPhoneNumberDialog()
             }
         }
     }
@@ -72,7 +73,7 @@ class MainActivity : AppCompatActivity() {
 
         builder.setView(layout)
 
-        builder.setPositiveButton("Send Code") { dialog, _ ->
+        builder.setPositiveButton("Send Code") { _, _ ->
             val phoneNumber = phoneInput.text.toString()
             if (phoneNumber.isNotEmpty()) {
                 vm.startPhoneNumberVerification(this, phoneNumber, verificationCallbacks)
@@ -122,15 +123,15 @@ class MainActivity : AppCompatActivity() {
 
         builder.setView(layout)
 
-        builder.setPositiveButton("Verify") { dialog, _ ->
+        builder.setPositiveButton("Verify") { _, _ ->
             val code = codeInput.text.toString()
             if (code.isNotEmpty()) {
                 val credential = authManager.verifyPhoneNumberWithCode(code)
-                vm.signInWithPhoneAuthCredential(this, credential) { success, message ->
+                vm.createUserWithPhoneNumber(credential) { success, message ->
                     if (success) {
-                        Toast.makeText(this, "Sign-in successful", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "User created successfully", Toast.LENGTH_LONG).show()
                     } else {
-                        Toast.makeText(this, "Sign-in failed: $message", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Failed to create user: $message", Toast.LENGTH_LONG).show()
                     }
                 }
             } else {
@@ -174,14 +175,7 @@ class MainActivity : AppCompatActivity() {
             for (i in 0 until document.numberOfPages) {
                 val pageBitmap = renderer.renderImageWithDPI(i, 300f)
                 val (qrCodeContent) = decodeQRCode(pageBitmap)
-
-                if (qrCodeContent != null) {
-                    showDescriptionDialog(qrCodeContent, uid)
-                    Log.d("QR Code Found", "QR Code found on page $i")
-                    break
-                } else {
-                    Log.d("QR Code Not Found", "No QR Code found on page $i")
-                }
+                showQRCodeResultDialog(qrCodeContent, uid)
             }
             document.close()
         } catch (e: Exception) {
@@ -228,12 +222,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun showQRCodeResultDialog(qrCodeText: String?) {
+    private fun showQRCodeResultDialog(qrCodeText: String?, uid: String) {
         val message = qrCodeText?.let { "QR code found in the PDF:\n$it" } ?: "No QR codes found in the PDF."
         AlertDialog.Builder(this)
             .setTitle("QR Code Scan Result")
             .setMessage(message)
-            .setPositiveButton("OK", null)
+            .setPositiveButton("OK") { dialog, _ ->
+                if (qrCodeText != null) {
+                    showDescriptionDialog(qrCodeText, uid)
+                }
+                dialog.dismiss()}
             .show()
     }
 
@@ -246,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Set QR Code Description")
 
-        val input = binding.descriptionEditText
+        val input = EditText(this)
         input.hint = "Enter description"
         val parent = input.parent as? ViewGroup
         parent?.removeView(input)
@@ -256,7 +254,6 @@ class MainActivity : AppCompatActivity() {
         builder.setPositiveButton("OK") { dialog, _ ->
             val description = input.text.toString()
             storeQRCodeContent(qrCodeContent, uid, description)
-            showQRCodeResultDialog(qrCodeContent)
             dialog.dismiss()
         }
         builder.setNegativeButton("Cancel") { dialog, _ ->
