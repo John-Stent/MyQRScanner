@@ -1,0 +1,17 @@
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:startDestination="@id/nav_login">
+
+    <fragment
+        android:id="@+id/nav_login"
+        android:name="com.istentoumis.myqrscanner.LoginFragment"
+        android:label="Login" />
+    <fragment
+        android:id="@+id/nav_pdf"
+        android:name="com.istentoumis.myqrscanner.LoadPdfFragment"
+        android:label="Load PDF" />
+<!--    <fragment-->
+<!--        android:id="@+id/nav_camera"-->
+<!--        android:name="com.istentoumis.myqrscanner.CameraFragment"-->
+<!--        android:label="Camera" />-->
+</navigation>

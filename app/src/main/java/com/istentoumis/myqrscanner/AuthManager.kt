@@ -15,6 +15,7 @@ class AuthManager @Inject constructor(
     private val auth: FirebaseAuth
 ) {
     private var verificationId: String? = null
+    private var currentUser: FirebaseUser? = null
 
     fun startPhoneNumberVerification(activity: Activity, phoneNumber: String, callbacks: PhoneAuthProvider.OnVerificationStateChangedCallbacks) {
         val options = PhoneAuthOptions.newBuilder(auth)
@@ -57,6 +58,14 @@ class AuthManager @Inject constructor(
     }
 
     fun getCurrentUser(): FirebaseUser? {
-        return auth.currentUser
+        return currentUser ?: auth.currentUser
+    }
+
+    fun setCurrentUser(user: FirebaseUser?) {
+        currentUser = user
+    }
+
+    fun getUid(): String? {
+        return getCurrentUser()?.uid
     }
 }

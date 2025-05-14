@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.istentoumis.myqrscanner"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.istentoumis.myqrscanner"
         minSdk = 28
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -56,6 +56,9 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.extensions)
     implementation(libs.hilt.android)
+    implementation(libs.androidx.navigation.runtime.android)
+    implementation(libs.androidx.navigation.ui.ktx)
+    implementation(libs.androidx.navigation.fragment)
     kapt(libs.hilt.compiler)
     implementation(libs.barcode.scanning)
     implementation(libs.androidx.core.ktx)
