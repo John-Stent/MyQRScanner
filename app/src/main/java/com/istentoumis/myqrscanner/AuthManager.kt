@@ -68,4 +68,10 @@ class AuthManager @Inject constructor(
     fun getUid(): String? {
         return getCurrentUser()?.uid
     }
+
+    fun signOut() {
+        auth.signOut()
+        currentUser = null
+        verificationId = null
+    }
 }

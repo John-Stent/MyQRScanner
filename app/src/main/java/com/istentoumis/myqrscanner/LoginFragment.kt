@@ -6,10 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.FirebaseException
 import com.google.firebase.auth.PhoneAuthCredential
 import com.google.firebase.auth.PhoneAuthProvider
@@ -30,38 +33,45 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        showPhoneNumberDialog()
-    }
+//        showPhoneNumberDialog()
+        displayUserInfo(view)
+        val phoneInput = view.findViewById<TextInputEditText>(R.id.phoneInput)
+        val sendCodeButton = view.findViewById<MaterialButton>(R.id.sendCodeButton)
 
-    private fun showPhoneNumberDialog() {
-        val builder = AlertDialog.Builder(requireContext())
-        builder.setTitle("Login")
-
-        val layout = LinearLayout(requireContext())
-        layout.orientation = LinearLayout.VERTICAL
-
-        val phoneInput = EditText(requireContext())
-        phoneInput.hint = "Enter phone number"
-        layout.addView(phoneInput)
-
-        builder.setView(layout)
-
-        builder.setPositiveButton("Send Code") { _, _ ->
-            val phoneNumber = phoneInput.text.toString()
-            if (phoneNumber.isNotEmpty()) {
-                viewModel.startPhoneNumberVerification(requireActivity(), phoneNumber, verificationCallbacks)
+        sendCodeButton.setOnClickListener {
+            val phone = phoneInput.text?.toString()?.trim()
+            if (!phone.isNullOrEmpty()) {
+                viewModel.startPhoneNumberVerification(requireActivity(), phone, verificationCallbacks)
             } else {
                 Toast.makeText(requireContext(), "Please enter a phone number", Toast.LENGTH_SHORT).show()
             }
         }
 
-        builder.setNegativeButton("Cancel") { dialog, _ ->
-            dialog.cancel()
+        val logoutButton = view.findViewById<MaterialButton>(R.id.logoutButton)
+        logoutButton.setOnClickListener {
+            viewModel.authManager.signOut()
+            Toast.makeText(requireContext(), "Logged out successfully", Toast.LENGTH_SHORT).show()
+            // Optionally, clear UI or navigate to login screen
+            view.findViewById<TextView>(R.id.phoneNumberTextView).text = "Phone: N/A"
+            view.findViewById<TextView>(R.id.qrCodeCountTextView).text = "QR Codes: N/A"
         }
-
-        builder.show()
     }
 
+    private fun displayUserInfo(view: View) {
+        val phoneTextView = view.findViewById<TextView>(R.id.phoneNumberTextView)
+        val qrCountTextView = view.findViewById<TextView>(R.id.qrCodeCountTextView)
+        val user = viewModel.authManager.getCurrentUser()
+        phoneTextView.text = "Phone: ${user?.phoneNumber ?: "N/A"}"
+        val uid = user?.uid ?: return
+        val dbRef = com.google.firebase.database.FirebaseDatabase.getInstance()
+            .getReference("Users/$uid/QRCodeData")
+        dbRef.get().addOnSuccessListener { snapshot ->
+            val count = snapshot.childrenCount
+            qrCountTextView.text = "QR Codes: $count"
+        }.addOnFailureListener {
+            qrCountTextView.text = "QR Codes: N/A"
+        }
+    }
     private val verificationCallbacks = object : PhoneAuthProvider.OnVerificationStateChangedCallbacks() {
         override fun onVerificationCompleted(credential: PhoneAuthCredential) {
             viewModel.signInWithPhoneAuthCredential(requireActivity(), credential) { success, message ->
