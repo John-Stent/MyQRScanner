@@ -1,92 +1,75 @@
 <com.google.android.material.card.MaterialCardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="16dp"
-    app:cardCornerRadius="12dp"
-    app:cardElevation="4dp">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:layout_margin="24dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp"
+    app:cardBackgroundColor="@android:color/white">
 
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    <LinearLayout
+        android:id="@+id/contentLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="24dp"
+        android:clipToPadding="false">
 
-        <LinearLayout
-            android:id="@+id/contentLayout"
+        <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:layout_gravity="top"
-            android:clipToPadding="false"
-            android:paddingBottom="72dp">
-
-            <!-- All your views except the logout button go here -->
-            <!-- ... (Phone input, send code, code input, verify, textviews) ... -->
-
-            <com.google.android.material.textfield.TextInputLayout
+            android:layout_height="wrap_content"
+            android:hint="Phone Number">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/phoneInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Phone Number">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/phoneInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="phone" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/sendCodeButton"
-                style="@style/CustomButtonStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Send Code" />
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Verification Code">
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/codeInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:visibility="gone" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/verifyButton"
-                style="@style/CustomButtonStyle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Verify Code"
-                android:visibility="gone" />
-
-            <TextView
-                android:id="@+id/phoneNumberTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Phone: " />
-
-            <TextView
-                android:id="@+id/qrCodeCountTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="QR Codes: " />
-
-        </LinearLayout>
+                android:inputType="phone"
+                android:textColor="@color/black"
+                android:focusedByDefault="true"
+                />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/logoutButton"
+            android:id="@+id/sendCodeButton"
             style="@style/CustomButtonStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_margin="16dp"
-            android:text="Logout" />
+            android:layout_marginTop="16dp"
+            android:text="Send Code" />
 
-    </FrameLayout>
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Verification Code">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/codeInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:visibility="gone" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/verifyButton"
+            style="@style/CustomButtonStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Verify Code"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/pdfExplanationText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enter your phone number to login. You will receive a verification code."
+            android:textAlignment="center"
+            android:textColor="@android:color/darker_gray"
+            android:layout_marginTop="24dp"
+            android:textSize="14sp" />
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

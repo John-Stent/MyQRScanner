@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">QR Scanner</string>
+    <string name="qr_pdf_utility"><![CDATA[QR & PDF Utility]]></string>
 </resources>
